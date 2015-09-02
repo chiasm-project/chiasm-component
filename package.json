@@ -1,0 +1,44 @@
+{
+  "name": "chiasm-component",
+  "version": "0.2.0",
+  "description": "A common base for Chiasm plugins.",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "browserify -o chiasm-component.js -s ChiasmComponent index.js",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chiasm-project/chiasm-component.git"
+  },
+  "keywords": [
+    "chiasm",
+    "component",
+    "model",
+    "plugin"
+  ],
+  "author": "Curran Kelleher",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chiasm-project/chiasm-component/issues"
+  },
+  "homepage": "https://github.com/chiasm-project/chiasm-component",
+  "devDependencies": {
+    "browserify": "^11.0.1",
+    "browserify-shim": "^3.8.10",
+    "browserify-versionify": "^1.0.6",
+    "mocha": "^2.3.0"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim",
+      "browserify-versionify"
+    ]
+  },
+  "browserify-shim": {
+    "model-js": "global:Model"
+  },
+  "dependencies": {
+    "model-js": "^0.2.4"
+  }
+}
