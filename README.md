@@ -3,16 +3,16 @@
 [![Build
 Status](https://travis-ci.org/chiasm-project/chiasm-component.svg?branch=master)](https://travis-ci.org/chiasm-project/chiasm-component)
 
-A common base for Chiasm plugins.
+A common base for [Chiasm](https://github.com/chiasm-project/chiasm) plugins.
 
-This module is a thin wrapper around model.js that adds an API for defining
+This module is a thin wrapper around [Model.js](https://github.com/curran/model) that adds an API for defining
 public properties.  In Chiasm, only public properties are allowed to be
 configured via `chiasm.setConfig(config)`. If a user attempts to configure a
 property value not added as a public property, an error will be reported.
 
 Example use:
 
-```
+```javascript
 var myComponent = ChiasmComponent ({ x: "foo", y: "bar" });
 ```
 
@@ -26,7 +26,106 @@ The constructor argument `publicProperties` (optional) is an object where:
   
 This argument specifies a set of public properties and their default values.
 
-`addPublicProperty()`
+```javascript
+myComponent.addPublicProperty("z", "baz");
+```
 
-This function adds a public property to a model.  This makes the property
-configurable via `chiasm.setConfig(config)`.
+This function adds a public property to a model (e.g. "z") and specifies its default value (e.g. "baz").  This makes the property available for dynamic configuration within Chiasm.
+
+# API Documentation
+
+This documentation centers around how to create and use Chiasm plugins. If you'd like to see another topic covered in this style, or have any questions in general, please feel free to
+
+ * [create an issue](https://github.com/curran/chiasm/issues), or
+ * send a message to the [Chiasm Google Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/chiasm-viz)
+
+## Creating Plugins
+
+Defining a basic plugin is as simple as creating an AMD module that returns a [Model](https://github.com/curran/model). See [runtime unit tests](https://github.com/curran/chiasm/blob/gh-pages/tests/runtimeTest.js) for examples of simple plugins.
+
+The simplest possible plugin module looks like this:
+
+```javascript
+define(["model"], function (Model){
+  return function MyPlugin(){
+    return Model();
+  };
+});
+```
+
+By default, changes are only propagated from the configuration to components. In cases where user interaction causes changes in components, it is desirable to have those changes propagate back into the configuration. This is so the visualization state resulting from user interactions can be serialized. To enable this, set a special property `publicProperties` to be an array of property names. Each of these properties must have a default value defined on the model returned from the plugin constructor. In cases where the property is optional and is initially not specified, use `Model.None` (which is conceptually similar to [Scala's Option type](http://alvinalexander.com/scala/using-scala-option-some-none-idiom-function-java-null)).
+
+```javascript
+define(["model"], function (Model){
+  return function MyPlugin(){
+    return Model({
+      publicProperties: ["message"],
+      message: Model.None
+    });
+  };
+});
+```
+
+A reference to the containing Chiasm instance is passed into the plugin constructor. This has a `container` property, which is the container DOM element passed into the Chiasm constructor. Here's how you can use the DOM and create elements associated with the plugin.
+
+```javascript
+define(["model"], function (Model){
+  return function MyPlugin(runtime){
+    var model = Model({
+      publicProperties: ["message"],
+      message: Model.None,
+      textBox: runtime.div.appendChild("textarea")
+    });
+    model.when(["textarea", "message"], function(textarea, message){
+      textarea.innerHTML = message;
+    });
+    return model;
+  };
+});
+```
+
+To avoid memory leaks and unused DOM elements, plugins should define a `destroy` method on the returned model, which will be invoked by the runtime when the component is removed from the configuration. 
+
+This is what a complete plugin looks like.
+
+```javascript
+define(["model"], function (Model){
+  return function MyPlugin(runtime){
+    var model = Model({
+      publicProperties: ["message"],
+      message: Model.None
+    });
+
+    var textBox = runtime.div.appendChild("textarea");
+
+    model.when("message", function(message){
+      textBox.innerHTML = message;
+    });
+
+    model.destroy = function(){
+      runtime.div.removeChild(textBox)
+    };
+
+    return model;
+  };
+});
+```
+
+## Plugin Property Conventions
+
+The above plugin guide is generic, but Chiasm expects certain properties to be used in certain ways. Here is a list of common properties and their uses.
+
+ * `el` The DOM element that will contain the visualization. Plugins can assume that this value will be set only once.
+ * `box` An object with (x, y, width, height) that represents the outer rectangle containing the visualization.
+
+From here, you can dive deeper and check out the [Chiasm Foundation Example](http://bl.ocks.org/curran/b4aa88691528c0f0b1fa), which contains a basic Chaism plugin that uses SVG, and another that uses Canvas.
+
+## Glossary
+
+The following terms have a precise meaning within the Chiasm project.
+
+ * **Plugin** An [AMD module](http://requirejs.org/docs/whyamd.html) that defines a constructor function that returns components.
+ * **Component** A [Model.js model](https://github.com/curran/model) constructed by a plugin.
+ * **Configuration** A JSON data structure that defines a collection of components and values for their public properties.
+ * **Public Properties** The set of properties for a given component that can be set via the configuration. Public properties are declared in a special component property `publicProperties`, an array of property name strings. All public properties must have default values.
+ * **Default Values** Values for public properties that are initially assigned to the properties at the time the component is constructed. Since all public properties must have default values, `Model.None` should be used in cases where the property is optional.
