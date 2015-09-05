@@ -32,39 +32,41 @@ myComponent.addPublicProperty("z", "baz");
 
 This function adds a public property to a model (e.g. "z") and specifies its default value (e.g. "baz").  This makes the property available for dynamic configuration within Chiasm.
 
-# API Documentation
+# Background
 
-This documentation centers around how to create and use Chiasm plugins. If you'd like to see another topic covered in this style, or have any questions in general, please feel free to
-
- * [create an issue](https://github.com/curran/chiasm/issues), or
- * send a message to the [Chiasm Google Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/chiasm-viz)
-
-## Creating Plugins
-
-Defining a basic plugin is as simple as creating an AMD module that returns a [Model](https://github.com/curran/model). See [runtime unit tests](https://github.com/curran/chiasm/blob/gh-pages/tests/runtimeTest.js) for examples of simple plugins.
-
-The simplest possible plugin module looks like this:
+Originally, Chaism plugins were simply Models, so a plugin could be defined like this:
 
 ```javascript
-define(["model"], function (Model){
-  return function MyPlugin(){
-    return Model();
-  };
-});
+function MyPlugin(){
+  return Model();
+};
 ```
 
-By default, changes are only propagated from the configuration to components. In cases where user interaction causes changes in components, it is desirable to have those changes propagate back into the configuration. This is so the visualization state resulting from user interactions can be serialized. To enable this, set a special property `publicProperties` to be an array of property names. Each of these properties must have a default value defined on the model returned from the plugin constructor. In cases where the property is optional and is initially not specified, use `Model.None` (which is conceptually similar to [Scala's Option type](http://alvinalexander.com/scala/using-scala-option-some-none-idiom-function-java-null)).
+The problem with this setup is that changes can only be propagated from the Chiasm configuration to components, but not the other way around, because Chiasm has no way to know which properties it should listen for changes on. In cases where user interaction causes changes in components, it is desirable to have those changes propagate back into the configuration. This is so the visualization state resulting from user interactions can be serialized.
+
+To enable change propagation from components to the Chiasm configuration, set a special property `publicProperties` was introduced. This is an array of property names. Each of these properties must have a default value defined on the model at the time it is returned from the component constructor. In cases where the property is optional and is initially not specified, use `Model.None` (which is conceptually similar to [Scala's Option type](http://alvinalexander.com/scala/using-scala-option-some-none-idiom-function-java-null)).
 
 ```javascript
-define(["model"], function (Model){
-  return function MyPlugin(){
-    return Model({
-      publicProperties: ["message"],
-      message: Model.None
-    });
-  };
-});
+return function MyPlugin(){
+  return Model({
+    publicProperties: ["message"],
+    message: "Hello"
+  });
+};
 ```
+
+The above code is equivalent to:
+
+```javascript
+return function MyPlugin(){
+  return ChiasmComponent({
+    message: "Hello"
+  });
+};
+```
+
+It became clear that if a property is not declared as a public property, then configured by the Chiasm configuration, then that configured property is *removed* from the configuration, the system results in an unpredictable state. This is because when a property is removed from the configuration, it should be *reset to its default value*. If a property is not declared as a public property, Chiasm has no way of knowing what its default value is. Therefore, to ensure stability and a consistently predictable state under all runtime configuration changes (including removing properties), the strict rule was added in Chiasm that *only public properties are allowed to be configured*. This is why an error is reported if a property is attempted to be configured that is not a public property.
+
 
 A reference to the containing Chiasm instance is passed into the plugin constructor. This has a `container` property, which is the container DOM element passed into the Chiasm constructor. Here's how you can use the DOM and create elements associated with the plugin.
 
