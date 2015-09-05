@@ -32,7 +32,7 @@ myComponent.addPublicProperty("z", "baz");
 
 This function adds a public property to a model (e.g. "z") and specifies its default value (e.g. "baz").  This makes the property available for dynamic configuration within Chiasm.
 
-# Background
+## Background
 
 Originally, Chaism plugins were simply Models, so a plugin could be defined like this:
 
@@ -55,7 +55,7 @@ return function MyPlugin(){
 };
 ```
 
-The above code is equivalent to:
+ChiasmComponent provides syntactic sugar for the above convention. The above code is equivalent to:
 
 ```javascript
 return function MyPlugin(){
@@ -65,60 +65,25 @@ return function MyPlugin(){
 };
 ```
 
-It became clear that if a property is not declared as a public property, then configured by the Chiasm configuration, then that configured property is *removed* from the configuration, the system results in an unpredictable state. This is because when a property is removed from the configuration, it should be *reset to its default value*. If a property is not declared as a public property, Chiasm has no way of knowing what its default value is. Therefore, to ensure stability and a consistently predictable state under all runtime configuration changes (including removing properties), the strict rule was added in Chiasm that *only public properties are allowed to be configured*. This is why an error is reported if a property is attempted to be configured that is not a public property.
+## Why "public properties"?
 
+It became clear in early Chiasm prototypes that if a property is not declared as a public property, then configured by the Chiasm configuration, then that configured property is *removed* from the configuration, the system results in an unpredictable state. This is because when a property is removed from the configuration, it should be *reset to its default value*. If a property is not declared as a public property, Chiasm has no way of knowing what its default value is. Therefore, to ensure stability and a consistently predictable state under all runtime configuration changes (including removing properties), the strict rule was added in Chiasm that **only public properties are allowed to be configured**. This is why an error is reported if a property is attempted to be configured that is not a public property.
 
-A reference to the containing Chiasm instance is passed into the plugin constructor. This has a `container` property, which is the container DOM element passed into the Chiasm constructor. Here's how you can use the DOM and create elements associated with the plugin.
+## Working with the DOM
 
-```javascript
-define(["model"], function (Model){
-  return function MyPlugin(runtime){
-    var model = Model({
-      publicProperties: ["message"],
-      message: Model.None,
-      textBox: runtime.div.appendChild("textarea")
-    });
-    model.when(["textarea", "message"], function(textarea, message){
-      textarea.innerHTML = message;
-    });
-    return model;
-  };
-});
-```
-
-To avoid memory leaks and unused DOM elements, plugins should define a `destroy` method on the returned model, which will be invoked by the runtime when the component is removed from the configuration. 
-
-This is what a complete plugin looks like.
+Here's how you can use the DOM and create elements associated with the plugin.
 
 ```javascript
-define(["model"], function (Model){
-  return function MyPlugin(runtime){
-    var model = Model({
-      publicProperties: ["message"],
-      message: Model.None
-    });
-
-    var textBox = runtime.div.appendChild("textarea");
-
-    model.when("message", function(message){
-      textBox.innerHTML = message;
-    });
-
-    model.destroy = function(){
-      runtime.div.removeChild(textBox)
-    };
-
-    return model;
-  };
-});
+function MyPlugin(){
+  var component = ChiasmComponent({
+    message: "Hello"
+  });
+  component.el = document.createElement("div");
+  return component;
+}
 ```
 
-## Plugin Property Conventions
-
-The above plugin guide is generic, but Chiasm expects certain properties to be used in certain ways. Here is a list of common properties and their uses.
-
- * `el` The DOM element that will contain the visualization. Plugins can assume that this value will be set only once.
- * `box` An object with (x, y, width, height) that represents the outer rectangle containing the visualization.
+The property `el` stands for "element" (inspired by [el in Backbone Views](http://backbonejs.org/#View-el)). This element should be created in the component constructor. The [Chiasm Layout Plugin](https://github.com/chiasm-project/chiasm-layout) looks for this special property, and manages adding and removing this DOM element from a parent container element.
 
 From here, you can dive deeper and check out the [Chiasm Foundation Example](http://bl.ocks.org/curran/b4aa88691528c0f0b1fa), which contains a basic Chaism plugin that uses SVG, and another that uses Canvas.
 
@@ -126,7 +91,7 @@ From here, you can dive deeper and check out the [Chiasm Foundation Example](htt
 
 The following terms have a precise meaning within the Chiasm project.
 
- * **Plugin** An [AMD module](http://requirejs.org/docs/whyamd.html) that defines a constructor function that returns components.
+ * **Plugin** A JavaScript module that defines a constructor function that returns a component.
  * **Component** A [Model.js model](https://github.com/curran/model) constructed by a plugin.
  * **Configuration** A JSON data structure that defines a collection of components and values for their public properties.
  * **Public Properties** The set of properties for a given component that can be set via the configuration. Public properties are declared in a special component property `publicProperties`, an array of property name strings. All public properties must have default values.
