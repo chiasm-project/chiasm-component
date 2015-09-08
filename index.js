@@ -29,7 +29,7 @@ function ChiasmComponent (publicProperties){
   // In Chiasm, only public properties are allowed to be configured via
   // `setConfig`. If a user attempts to configure a property value not added as
   // a public property , then an error will be reported.
-  function addPublicProperty(property, defaultValue){
+  my.addPublicProperty = function (property, defaultValue){
     if(!my.publicProperties){
       my.publicProperties = [];
     }
@@ -38,20 +38,29 @@ function ChiasmComponent (publicProperties){
   };
 
   // Adds all public properties in the given object.
-  function addPublicProperties(publicProperties){
+  my.addPublicProperties = function (publicProperties){
     Object.keys(publicProperties).forEach(function (property){
-      addPublicProperty(property, publicProperties[property]);
+      my.addPublicProperty(property, publicProperties[property]);
     });
   };
+
+  // Initialize an SVG container element for chaism-layout to use.
+  // This is for supporting multiple components in a single SVG element.
+  my.initSVG = function (){
+    return my.el = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  }
+  
+  // Initialize a DIV container element for chaism-layout to use.
+  my.initDIV = function (){
+    return my.el = document.createElement("div");
+  }
 
   // Add the default values passed into the constructor
   // as public properties.
   if(publicProperties){
-    addPublicProperties(publicProperties);
+    my.addPublicProperties(publicProperties);
   }
 
-  my.addPublicProperty = addPublicProperty;
-  my.addPublicProperties = addPublicProperties;
   return my;
 }
 
