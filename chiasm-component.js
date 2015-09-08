@@ -21,7 +21,7 @@ function ChiasmComponent (publicProperties){
 
   // A Chiasm component is just a Model ( see github.com/curran/model ),
   // with special semantics around the notion of a "public property".
-  var model = Model();
+  var my = new Model();
 
   // `addPublicProperty()`
   //
@@ -31,22 +31,30 @@ function ChiasmComponent (publicProperties){
   // In Chiasm, only public properties are allowed to be configured via
   // `setConfig`. If a user attempts to configure a property value not added as
   // a public property , then an error will be reported.
-  model.addPublicProperty = function (property, defaultValue){
-    if(!model.publicProperties){
-      model.publicProperties = [];
+  function addPublicProperty(property, defaultValue){
+    if(!my.publicProperties){
+      my.publicProperties = [];
     }
-    model.publicProperties.push(property);
-    model[property] = defaultValue;
+    my.publicProperties.push(property);
+    my[property] = defaultValue;
+  };
+
+  // Adds all public properties in the given object.
+  function addPublicProperties(publicProperties){
+    Object.keys(publicProperties).forEach(function (property){
+      addPublicProperty(property, publicProperties[property]);
+    });
   };
 
   // Add the default values passed into the constructor
   // as public properties.
-  publicProperties = publicProperties || {};
-  Object.keys(publicProperties).forEach(function (property){
-    model.addPublicProperty(property, publicProperties[property]);
-  });
+  if(publicProperties){
+    addPublicProperties(publicProperties);
+  }
 
-  return model;
+  my.addPublicProperty = addPublicProperty;
+  my.addPublicProperties = addPublicProperties;
+  return my;
 }
 
 module.exports = ChiasmComponent;

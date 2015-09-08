@@ -23,4 +23,14 @@ describe("ChiasmComponent", function() {
     expect(component.foo).to.equal("bar");
   });
 
+  it("should set public properties specified via addPublicProperties", function () {
+    var component = ChiasmComponent();
+    component.addPublicProperties({ x: 50, y: 100 });
+    expect(component.publicProperties.length).to.equal(2);
+    expect(component.publicProperties).to.contain("x");
+    expect(component.x).to.equal(50);
+    expect(component.publicProperties).to.contain("y");
+    expect(component.y).to.equal(100);
+  });
+
 });
