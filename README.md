@@ -3,7 +3,7 @@
 [![Build
 Status](https://travis-ci.org/chiasm-project/chiasm-component.svg?branch=master)](https://travis-ci.org/chiasm-project/chiasm-component)
 
-A common base for [Chiasm](https://github.com/chiasm-project/chiasm) plugins.
+A common base for [Chiasm](https://github.com/chiasm-project/chiasm) components.
 
 This module is a thin wrapper around [Model.js](https://github.com/curran/model) that adds an API for defining
 public properties.  In Chiasm, only public properties are allowed to be
@@ -34,7 +34,7 @@ This function adds a public property to a model (e.g. "z") and specifies its def
 
 ## Background
 
-Originally, Chaism plugins were simply Models, so a plugin could be defined like this:
+Originally, Chaism components were simply Models, so a plugin could be defined like this:
 
 ```javascript
 function MyPlugin(){
