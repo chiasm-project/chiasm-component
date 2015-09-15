@@ -34,10 +34,10 @@ This function adds a public property to a model (e.g. "z") and specifies its def
 
 ## Background
 
-Originally, Chaism components were simply Models, so a plugin could be defined like this:
+Originally, Chaism components were simply Models, so a component could be defined like this:
 
 ```javascript
-function MyPlugin(){
+function MyComponent(){
   return Model();
 };
 ```
@@ -47,7 +47,7 @@ The problem with this setup is that changes can only be propagated from the Chia
 To enable change propagation from components to the Chiasm configuration, set a special property `publicProperties` was introduced. This is an array of property names. Each of these properties must have a default value defined on the model at the time it is returned from the component constructor. In cases where the property is optional and is initially not specified, use `Model.None` (which is conceptually similar to [Scala's Option type](http://alvinalexander.com/scala/using-scala-option-some-none-idiom-function-java-null)).
 
 ```javascript
-return function MyPlugin(){
+return function MyComponent(){
   return Model({
     publicProperties: ["message"],
     message: "Hello"
@@ -58,7 +58,7 @@ return function MyPlugin(){
 ChiasmComponent provides syntactic sugar for the above convention. The above code is equivalent to:
 
 ```javascript
-return function MyPlugin(){
+return function MyComponent(){
   return ChiasmComponent({
     message: "Hello"
   });
@@ -71,10 +71,10 @@ It became clear in early Chiasm prototypes that if a property is not declared as
 
 ## Working with the DOM
 
-Here's how you can use the DOM and create elements associated with the plugin.
+Here's how you can use the DOM and create elements associated with the component.
 
 ```javascript
-function MyPlugin(){
+function MyComponent(){
   var component = ChiasmComponent({
     message: "Hello"
   });
@@ -83,16 +83,37 @@ function MyPlugin(){
 }
 ```
 
-The property `el` stands for "element" (inspired by [el in Backbone Views](http://backbonejs.org/#View-el)). This element should be created in the component constructor. The [Chiasm Layout Plugin](https://github.com/chiasm-project/chiasm-layout) looks for this special property, and manages adding and removing this DOM element from a parent container element.
+The property `el` stands for "element" (inspired by [el in Backbone Views](http://backbonejs.org/#View-el)). This element should be created in the component constructor. The [Chiasm Layout Component](https://github.com/chiasm-project/chiasm-layout) looks for this special property, and manages adding and removing this DOM element from a parent container element.
 
-From here, you can dive deeper and check out the [Chiasm Foundation Example](http://bl.ocks.org/curran/b4aa88691528c0f0b1fa), which contains a basic Chaism plugin that uses SVG, and another that uses Canvas.
+Two convenience methods are available on any `ChiasmComponent` instance:
+
+ * `initSVG()`
+ * `initDIV()`
+
+These are simple functions that create DOM elements for you and assign them to `my.el`. These two functions make it less code to work with [chiasm-layout](https://github.com/chiasm-project/chiasm-layout). This layout component manages two separate containers, one top-level SVG element for all components that use SVG, and another continer for arbitrary other DOM elements (typically divs). Their implementations are extremely simple:
+
+```
+my.initSVG = function (){
+  return my.el = document.createElementNS("http://www.w3.org/2000/svg", "g");
+}
+my.initDIV = function (){
+  return my.el = document.createElement("div");
+}
+```
+
+Both of these functions return a DOM element that you can consider the root node of your component and add children to. 
+
+From here, you can dive deeper and check out:
+
+ * [Chiasm Boilerplate](http://bl.ocks.org/curran/1af08ad6cdb01707c33f) A complete Chiasm application with a simple interactive graphic component.
+ * [Chiasm Foundation](http://bl.ocks.org/curran/b4aa88691528c0f0b1fa) A slightly more complex example that shows use of SVG and Canvas in the same application.
 
 ## Glossary
 
 The following terms have a precise meaning within the Chiasm project.
 
- * **Plugin** A JavaScript module that defines a constructor function that returns a component.
- * **Component** A [Model.js model](https://github.com/curran/model) constructed by a plugin.
- * **Configuration** A JSON data structure that defines a collection of components and values for their public properties.
- * **Public Properties** The set of properties for a given component that can be set via the configuration. Public properties are declared in a special component property `publicProperties`, an array of property name strings. All public properties must have default values.
- * **Default Values** Values for public properties that are initially assigned to the properties at the time the component is constructed. Since all public properties must have default values, `Model.None` should be used in cases where the property is optional.
+ * **component** A JavaScript module that defines a constructor function that returns a component.
+ * **component instance** A [Model.js model](https://github.com/curran/model) constructed by a component.
+ * **configuration** A JSON data structure that defines a collection of components and values for their public properties.
+ * **public properties** The set of properties for a given component that can be set via the configuration. Public properties are declared in a special component property `publicProperties`, an array of property name strings. All public properties must have default values.
+ * **default values** Values for public properties that are initially assigned to the properties at the time the component is constructed. Since all public properties must have default values, `Model.None` should be used in cases where the property is optional.
