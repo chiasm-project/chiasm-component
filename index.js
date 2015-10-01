@@ -1,5 +1,4 @@
 // chiasm-component.js
-// v__VERSION__
 // github.com/chiasm-project/chiasm-component
 //
 // This module is a base constructor for Chiasm components.  It is a thin

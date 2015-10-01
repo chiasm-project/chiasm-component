@@ -4,7 +4,7 @@
   "description": "A common base for Chiasm plugins.",
   "main": "index.js",
   "scripts": {
-    "pretest": "browserify -o chiasm-component.js -s ChiasmComponent index.js",
+    "pretest": "browserify -g browserify-shim -o chiasm-component.js -s ChiasmComponent index.js",
     "test": "mocha",
     "prepublish": "npm test"
   },
@@ -27,15 +27,8 @@
   "devDependencies": {
     "browserify": "^11.0.1",
     "browserify-shim": "^3.8.10",
-    "browserify-versionify": "^1.0.6",
     "chai": "^3.2.0",
     "mocha": "^2.3.0"
-  },
-  "browserify": {
-    "transform": [
-      "browserify-shim",
-      "browserify-versionify"
-    ]
   },
   "browserify-shim": {
     "model-js": "global:Model"
